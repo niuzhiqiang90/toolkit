@@ -45,7 +45,6 @@ function stop_nginx()
     popd > /dev/null
 }
 
-
 ################################################################################
 # reload nginx
 ################################################################################
@@ -57,7 +56,6 @@ function reload_nginx()
     [[ $? -eq 0 ]] && echo "ok" || echo "failed"
     popd > /dev/null
 }
-
 
 ################################################################################
 # clean up the nginx temp files
@@ -76,7 +74,6 @@ function clean_temp_files()
 function get_nginx_status()
 {
     nginx_pid=$(ps -ef | grep $nginx_cmd | grep -v grep | awk '{print $2}')
-
     if [[ ${nginx_pid} ]]; then
         echo "nginx is running ..."
     else
