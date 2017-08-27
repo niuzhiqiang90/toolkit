@@ -1,0 +1,137 @@
+#!/bin/bash
+################################################################################
+#          FILE: nginx-svc
+#         USAGE: 
+#   DESCRIPTION: this script is used to manage the nginx 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Sun 27 Aug 2017 08:36:17 PM CST
+#      REVISION: 1.0.0
+################################################################################
+
+declare -r nginx_home="/usr/local/nginx"
+declare -r nginx_cmd="./sbin/nginx"
+declare -r nginx_conf="./conf/nginx.conf"
+declare -r nginx_cache_home="/home/${LOGNAME}/tmp/nginx/cache"
+declare -r nginx_temp_home="/home/${LOGNAME}/tmp/nginx/tmp"
+
+################################################################################
+# start nginx
+################################################################################
+function start_nginx() 
+{
+    echo "Starting nginx ..."
+    sudo rm -rf ${nginx_cache_home}/*
+    pushd ${nginx_home} > /dev/null
+    sudo ${nginx_cmd} -c ${nginx_conf} &
+    [[ $? -eq 0 ]] && echo "ok" || echo "failed"
+    popd > /dev/null
+}
+
+################################################################################
+# stop nginx
+################################################################################
+function stop_nginx() 
+{
+    echo "Stopping nginx ..."
+    pushd ${nginx_home} > /dev/null
+    nginx_pid=$(ps -ef | grep $nginx_cmd | grep -v grep | awk '{print $2}')
+    sudo kill ${nginx_pid}
+    [[ $? -eq 0 ]] && echo "ok" || echo "failed"
+    popd > /dev/null
+}
+
+
+################################################################################
+# reload nginx
+################################################################################
+function reload_nginx()
+{
+    echo "Reloading nginx ..."
+    pushd ${nginx_home} > /dev/null
+    sudo ${nginx_cmd} -s reload 
+    [[ $? -eq 0 ]] && echo "ok" || echo "failed"
+    popd > /dev/null
+}
+
+
+################################################################################
+# clean up the nginx temp files
+################################################################################
+function clean_temp_files()
+{
+    echo "Cleaning nginx temp files ..."
+    sudo rm -rf ${nginx_cache_home}/*
+    sudo rm -rf ${nginx_temp_home}/*
+    [[ $? -eq 0 ]] && echo "ok" || echo "failed"
+}
+
+################################################################################
+# get the nginx running status
+################################################################################
+function get_nginx_status()
+{
+    nginx_pid=$(ps -ef | grep $nginx_cmd | grep -v grep | awk '{print $2}')
+
+    if [[ ${nginx_pid} ]]; then
+        echo "nginx is running ..."
+    else
+        echo "nginx is stopped ..."
+    fi
+}
+
+################################################################################
+# print the usage
+################################################################################
+function usage()
+{
+    echo "Usage: $0 {start|stop|restart|reload|status|clean}"
+    echo "1. run \`$0 start\`: start the nginx"
+    echo "2. run \`$0 stop\`: stop the nginx"
+    echo "3. run \`$0 restart\`: restart the nginx"
+    echo "4. run \`$0 reload\`: reload the nginx"
+    echo "5. run \`$0 status\`: get the nginx status"
+    echo "6. run \`$0 clean\`: clean the nginx temp files"
+    exit 1
+}
+
+################################################################################
+# main logic
+################################################################################
+function main()
+{   
+    if [[ $# -ne 1 ]]; then
+        usage
+    fi
+
+    case "$1" in
+        start)
+            start_nginx
+            ;;
+        stop)
+            stop_nginx
+            ;;
+        restart)
+            stop_nginx
+            start_nginx
+            ;;
+        reload)
+            reload_nginx
+            ;;
+        clean)
+            clean_temp_files
+            ;;
+        status)
+            get_nginx_status
+            ;;
+        *)
+            usage
+            ;;
+    esac
+}
+
+main $@
+
