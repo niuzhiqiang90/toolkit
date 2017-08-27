@@ -12,6 +12,7 @@
 #      REVISION: 1.0.0
 ################################################################################
 
+set -o nounset
 declare -r nginx_home="/usr/local/nginx"
 declare -r nginx_cmd="./sbin/nginx"
 declare -r nginx_conf="./conf/nginx.conf"
@@ -24,7 +25,7 @@ declare -r nginx_temp_home="/home/${LOGNAME}/tmp/nginx/tmp"
 function start_nginx() 
 {
     echo "Starting nginx ..."
-    sudo rm -rf ${nginx_cache_home}/*
+    sudo /bin/rm -rf ${nginx_cache_home}/*
     pushd ${nginx_home} > /dev/null
     sudo ${nginx_cmd} -c ${nginx_conf} &
     [[ $? -eq 0 ]] && echo "ok" || echo "failed"
@@ -64,8 +65,8 @@ function reload_nginx()
 function clean_temp_files()
 {
     echo "Cleaning nginx temp files ..."
-    sudo rm -rf ${nginx_cache_home}/*
-    sudo rm -rf ${nginx_temp_home}/*
+    sudo /bin/rm -rf ${nginx_cache_home}/*
+    sudo /bin/rm -rf ${nginx_temp_home}/*
     [[ $? -eq 0 ]] && echo "ok" || echo "failed"
 }
 
