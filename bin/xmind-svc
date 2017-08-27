@@ -1,0 +1,96 @@
+#!/bin/bash
+################################################################################
+#          FILE: xmind-svc
+#         USAGE: 
+#   DESCRIPTION: this script is used to manage the xmind 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Sun 27 Aug 2017 10:36:17 PM CST
+#      REVISION: 1.0.0
+################################################################################
+
+set -o nounset
+declare -r xmind_cmd_home="/usr/local/xmind/XMind_amd64"
+declare -r xmind_cmd="./XMind"
+
+################################################################################
+# start xmind
+################################################################################
+function start_xmind() 
+{
+    echo "Starting xmind ..."
+    pushd ${xmind_cmd_home} > /dev/null
+    ${xmind_cmd} &
+    [[ $? -eq 0 ]] && echo "ok" || echo "failed"
+    popd > /dev/null
+}
+
+################################################################################
+# stop xmind
+################################################################################
+function stop_xmind() 
+{
+    echo "Stopping xmind ..."
+    pushd ${xmind_cmd_home} > /dev/null
+    xmind_pid=$(ps -ef | grep $xmind_cmd | grep -v grep | awk '{print $2}')
+    kill ${xmind_pid}
+    [[ $? -eq 0 ]] && echo "ok" || echo "failed"
+    popd > /dev/null
+}
+
+
+################################################################################
+# get the xmind running status
+################################################################################
+function get_xmind_status()
+{
+    xmind_pid=$(ps -ef | grep $xmind_cmd | grep -v grep | awk '{print $2}')
+    if [[ ${xmind_pid} ]]; then
+        echo "xmind is running ..."
+    else
+        echo "xmind is stopped ..."
+    fi
+}
+
+################################################################################
+# print the usage
+################################################################################
+function usage()
+{
+    echo "Usage: $0 {start|stop|status}"
+    echo "1. run \`$0 start\`: start the xmind"
+    echo "2. run \`$0 stop\`: stop the xmind"
+    echo "3. run \`$0 status\`: get the xmind running status"
+    exit 1
+}
+
+################################################################################
+# main logic
+################################################################################
+function main()
+{   
+    if [[ $# -ne 1 ]]; then
+        usage
+    fi
+
+    case "$1" in
+        start)
+            start_xmind
+            ;;
+        stop)
+            stop_xmind
+            ;;
+        status)
+            get_xmind_status
+            ;;
+        *)
+            usage
+            ;;
+    esac
+}
+
+main $@
+
