@@ -12,67 +12,90 @@
 #      REVISION: 1.0.0
 ################################################################################
 
-declare -r mongod_home="/usr/local/bin/mongod"
+declare -r mongod_home="/usr/local/mongod"
 declare -r mongod_bin="./bin/mongod"
 declare -r mongod_conf="./conf/mongod.conf"
 declare -r mongod_log="./logs/mongod.log"
 declare -r mongod_log_dir=$(dirname $mongod_log)
 
-function start_mongod()
-{
-	echo "Starting mongod ..."
-    pushd ${mongod_home} > /dev/null
-    [[ ! -d ${mongod_log_dir} ]] && /bin/mkdir ${mongod_log_dir} && /usr/bin/touch ${mongod_log}
-    ${mongod_bin} --config ${mongod_conf} 2>&1 >> $log &
-	[ $? -eq 0 ] && echo "ok" || echo "failed"
-    popd > /dev/null
-}
-
+###############################################################################
+# get mongod pid
+##############################################################################
 function get_mongod_pid()
 {
     local mongod_pid=$(ps -ef | grep ${mongod_bin} | grep -v grep | awk '{print $2}')
     if [[ ${mongod_pid} -ne 0 ]]; then
+        echo ${mongod_pid}
         return ${mongod_pid}
     fi
     return 0
 }
 
-function stop_mongod()
+###############################################################################
+# start mongod 
+# if the log dir and file not exist, create it 
+##############################################################################
+function start_mongod()
 {
     pushd ${mongod_home} > /dev/null
-    local mongod_pid=get_mongod_pid
+    [[ ! -d ${mongod_log_dir} ]] && /bin/mkdir ${mongod_log_dir} && /usr/bin/touch ${mongod_log}
+    ${mongod_bin} --config ${mongod_conf} 2>&1 >> $mongod_log &
+    local mongod_pid=$(get_mongod_pid)
     if [[ ${mongod_pid} -ne 0 ]]; then
-	    echo "Stopping mongod ..."
-        /bin/kill ${mongod_pid}
-	    [[ $? -eq 0 ]] && echo "ok" || echo "failed" 
-    else
-        echo "mongod is not running ..."
-    fi
+        echo "mongod started..., PID=${mongod_pid}"
+        exit
+    fi 
+	echo "mongod start failed..."
     popd > /dev/null
 }
 
-
-function get_mongod_status()
+###############################################################################
+# stop mongod 
+##############################################################################
+function stop_mongod()
 {
-    local mongod_pid=get_mongod_pid
+    local mongod_pid=$(get_mongod_pid)
     if [[ ${mongod_pid} -ne 0 ]]; then
-        echo "mongod is running ..."
+	    echo "mongod quit..."
+        /bin/kill ${mongod_pid}
     else
-        echo "mongod is stopped ..."
+        echo "mongod is stopped" 
     fi
 }
 
+###############################################################################
+# get mongod status
+##############################################################################
+function get_mongod_status()
+{
+    local mongod_pid=$(get_mongod_pid)
+    if [[ $mongod_pid -ne 0 ]]; then
+        echo "mongod now is running, PID=${mongod_pid}"
+    else
+        echo "mongod is stopped"
+    fi
+}
+
+###############################################################################
+# print the log
+##############################################################################
 function view_log()
 {
     /usr/bin/tail -f ${mongod_log}
 }
 
+###############################################################################
+# print the usage
+##############################################################################
 function print_usage()
 {
     echo "Usage: $0 {start|stop|restart|status|tail}"
     exit 1
 }
 
+###############################################################################
+# the nain logic
+##############################################################################
 function main()
 {
     [[ $# -ne 1 ]] && print_usage
