@@ -15,7 +15,8 @@
 declare -r mongod_home="/usr/local/mongod"
 declare -r mongod_bin="./bin/mongod"
 declare -r mongod_conf="./conf/mongod.conf"
-declare -r mongod_log="./logs/mongod.log"
+# change the mongo log dir to your own
+declare -r mongod_log="/mnt/data/mongodb/log/mongod.log"
 declare -r mongod_log_dir=$(dirname $mongod_log)
 
 ###############################################################################
@@ -38,7 +39,7 @@ function get_mongod_pid()
 function start_mongod()
 {
     pushd ${mongod_home} > /dev/null
-    [[ ! -d ${mongod_log_dir} ]] && /bin/mkdir ${mongod_log_dir} && /usr/bin/touch ${mongod_log}
+    [[ ! -d ${mongod_log_dir} ]] && /bin/mkdir -p ${mongod_log_dir} && /usr/bin/touch ${mongod_log}
     ${mongod_bin} --config ${mongod_conf} 2>&1 >> $mongod_log &
     local mongod_pid=$(get_mongod_pid)
     if [[ ${mongod_pid} -ne 0 ]]; then
@@ -81,7 +82,9 @@ function get_mongod_status()
 ##############################################################################
 function view_log()
 {
+    pushd ${mongod_log_dir} > /dev/null
     /usr/bin/tail -f ${mongod_log}
+    popd > /dev/null
 }
 
 ###############################################################################
