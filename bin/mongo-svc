@@ -38,6 +38,11 @@ function get_mongod_pid()
 ##############################################################################
 function start_mongod()
 {
+    local mongod_pid=$(get_mongod_pid)
+    if [[ ${mongod_pid} -ne 0 ]]; then
+        echo "mongod already running, PID=${mongod_pid}"
+        exit
+    fi
     pushd ${mongod_home} > /dev/null
     [[ ! -d ${mongod_log_dir} ]] && /bin/mkdir -p ${mongod_log_dir} && /usr/bin/touch ${mongod_log}
     ${mongod_bin} --config ${mongod_conf} 2>&1 >> $mongod_log &
