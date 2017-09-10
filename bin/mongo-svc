@@ -49,9 +49,10 @@ function start_mongod()
     local mongod_pid=$(get_mongod_pid)
     if [[ ${mongod_pid} -ne 0 ]]; then
         echo "mongod started..., PID=${mongod_pid}"
-        exit
+    else
+	    echo "mongod start failed..."
+
     fi 
-	echo "mongod start failed..."
     popd > /dev/null
 }
 
@@ -62,8 +63,8 @@ function stop_mongod()
 {
     local mongod_pid=$(get_mongod_pid)
     if [[ ${mongod_pid} -ne 0 ]]; then
-	    echo "mongod quit..."
         /bin/kill ${mongod_pid}
+	    echo "mongod quit..."
     else
         echo "mongod is stopped" 
     fi
@@ -116,6 +117,7 @@ function main()
     		;;
     	restart)
     		stop_mongod
+            sleep 1
     		start_mongod
     		;;
         status)
