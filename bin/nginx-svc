@@ -24,11 +24,22 @@ declare -r nginx_temp_home="/home/${LOGNAME}/tmp/nginx/tmp"
 ################################################################################
 function start_nginx() 
 {
+    local nginx_pid=$(get_nginx_pid)
+    if [[ $nginx_pid -ne 0 ]]; then
+        echo "nginx already running, PID=${nginx_pid}"
+        exit
+    fi
     echo "Starting nginx ..."
     sudo /bin/rm -rf ${nginx_cache_home}/*
     pushd ${nginx_home} > /dev/null
     sudo ${nginx_cmd} -c ${nginx_conf} &
-    [[ $? -eq 0 ]] && echo "ok" || echo "failed"
+    sleep 1
+    local nginx_pid=$(get_nginx_pid)
+    if [[ $nginx_pid -ne 0 ]]; then
+        echo "nginx started, PID=${nginx_pid}"
+    else
+        echo "nginx start failed"
+    fi
     popd > /dev/null
 }
 
@@ -37,12 +48,13 @@ function start_nginx()
 ################################################################################
 function stop_nginx() 
 {
-    echo "Stopping nginx ..."
-    pushd ${nginx_home} > /dev/null
-    nginx_pid=$(ps -ef | grep $nginx_cmd | grep -v grep | awk '{print $2}')
-    sudo kill ${nginx_pid}
-    [[ $? -eq 0 ]] && echo "ok" || echo "failed"
-    popd > /dev/null
+    local nginx_pid=$(get_nginx_pid)
+    if [[ $nginx_pid -ne 0 ]]; then
+        sudo kill ${nginx_pid}
+        echo "quit nginx ..." 
+    else
+        echo "nginx stopped"
+    fi
 }
 
 ################################################################################
@@ -69,15 +81,28 @@ function clean_temp_files()
 }
 
 ################################################################################
+# get the nginx pid
+################################################################################
+function get_nginx_pid()
+{
+    local nginx_pid=$(ps -ef | grep $nginx_cmd | grep -v grep | awk '{print $2}')
+    if [[ ${nginx_pid} ]]; then
+        echo ${nginx_pid}
+        return $nginx_pid
+    fi
+    return 0
+}
+
+################################################################################
 # get the nginx running status
 ################################################################################
 function get_nginx_status()
 {
-    nginx_pid=$(ps -ef | grep $nginx_cmd | grep -v grep | awk '{print $2}')
-    if [[ ${nginx_pid} ]]; then
-        echo "nginx is running ..."
+    local nginx_pid=$(get_nginx_pid)
+    if [[ ${nginx_pid} -ne 0 ]]; then
+        echo "nginx is running, PID=${nginx_pid}"
     else
-        echo "nginx is stopped ..."
+        echo "nginx is stopped"
     fi
 }
 
