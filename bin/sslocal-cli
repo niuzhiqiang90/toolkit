@@ -1,0 +1,124 @@
+#!/bin/bash
+################################################################################
+#          FILE: sslocal-cli
+#         USAGE: 
+#   DESCRIPTION: this script is used to manage the sslocal 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Sun 27 Aug 2017 08:36:17 PM CST
+#      REVISION: 1.0.0
+################################################################################
+
+set -o nounset
+declare -r sslocal_cmd="/usr/local/bin/sslocal"
+declare -r sslocal_conf="/etc/shadowsocks/config.json"
+declare -r sslocal_log="/home/${LOGNAME}/ss.log"
+
+################################################################################
+# start sslocal
+################################################################################
+function start_sslocal() 
+{
+    local sslocal_pid=$(get_sslocal_pid)
+    if [[ $sslocal_pid -ne 0 ]]; then
+        echo "sslocal already running, PID=${sslocal_pid}"
+        exit
+    fi
+    echo "Starting sslocal ..."
+    ${sslocal_cmd} -c ${sslocal_conf} >> ${sslocal_log} 2>&1 &
+    sleep 1
+    local sslocal_pid=$(get_sslocal_pid)
+    if [[ $sslocal_pid -ne 0 ]]; then
+        echo "sslocal started, PID=${sslocal_pid}"
+    else
+        echo "sslocal start failed"
+    fi
+}
+
+################################################################################
+# stop sslocal
+################################################################################
+function stop_sslocal() 
+{
+    local sslocal_pid=$(get_sslocal_pid)
+    if [[ $sslocal_pid -ne 0 ]]; then
+        kill ${sslocal_pid}
+        echo "quit sslocal ..." 
+    else
+        echo "sslocal stopped"
+    fi
+}
+
+################################################################################
+# get the sslocal pid
+################################################################################
+function get_sslocal_pid()
+{
+    local sslocal_pid=$(ps -ef | grep $sslocal_cmd | grep -v grep | awk '{print $2}')
+    if [[ ${sslocal_pid} ]]; then
+        echo ${sslocal_pid}
+        return $sslocal_pid
+    fi
+    return 0
+}
+
+################################################################################
+# get the sslocal running status
+################################################################################
+function get_sslocal_status()
+{
+    local sslocal_pid=$(get_sslocal_pid)
+    if [[ ${sslocal_pid} -ne 0 ]]; then
+        echo "sslocal is running, PID=${sslocal_pid}"
+    else
+        echo "sslocal is stopped"
+    fi
+}
+
+################################################################################
+# print the usage
+################################################################################
+function usage()
+{
+    echo "Usage: $0 {start|stop|restart|reload|status|clean}"
+    echo "1. run \`$0 start\`: start the sslocal"
+    echo "2. run \`$0 stop\`: stop the sslocal"
+    echo "3. run \`$0 restart\`: restart the sslocal"
+    echo "4. run \`$0 status\`: get the sslocal status"
+    exit 1
+}
+
+################################################################################
+# main logic
+################################################################################
+function main()
+{   
+    if [[ $# -ne 1 ]]; then
+        usage
+    fi
+
+    case "$1" in
+        start)
+            start_sslocal
+            ;;
+        stop)
+            stop_sslocal
+            ;;
+        restart)
+            stop_sslocal
+            start_sslocal
+            ;;
+        status)
+            get_sslocal_status
+            ;;
+        *)
+            usage
+            ;;
+    esac
+}
+
+main $@
+
