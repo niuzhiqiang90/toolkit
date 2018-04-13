@@ -18,6 +18,8 @@ declare -r nginx_cmd="./sbin/nginx"
 declare -r nginx_conf="./conf/nginx.conf"
 declare -r nginx_cache_home="/home/${LOGNAME}/tmp/nginx/cache"
 declare -r nginx_temp_home="/home/${LOGNAME}/tmp/nginx/tmp"
+declare -r php_home="/usr/local/php"
+declare -r php_fpm_cmd="${php_home}/sbin/php-fpm"
 
 ################################################################################
 # start nginx
@@ -29,6 +31,8 @@ function start_nginx()
         echo "nginx already running, PID=${nginx_pid}"
         exit
     fi
+
+    start_php_fpm
     echo "Starting nginx ..."
     sudo /bin/rm -rf ${nginx_cache_home}/*
     pushd ${nginx_home} > /dev/null
@@ -52,6 +56,7 @@ function stop_nginx()
     if [[ $nginx_pid -ne 0 ]]; then
         sudo kill ${nginx_pid}
         echo "quit nginx ..." 
+        stop_php_fpm
     else
         echo "nginx stopped"
     fi
@@ -103,6 +108,28 @@ function get_nginx_status()
         echo "nginx is running, PID=${nginx_pid}"
     else
         echo "nginx is stopped"
+    fi
+}
+
+################################################################################
+# start php fpm
+################################################################################
+function start_php_fpm()
+{
+    if [[ -f ${php_fpm_cmd} ]]; then
+        echo "Starting php-fpm ..."
+        sudo ${php_fpm_cmd}
+    fi
+}
+
+################################################################################
+# stop php fpm
+################################################################################
+function stop_php_fpm()
+{
+    if [[ -f ${php_fpm_cmd} ]]; then
+        echo "Stopping php-fpm"
+        sudo killall php-fpm
     fi
 }
 
