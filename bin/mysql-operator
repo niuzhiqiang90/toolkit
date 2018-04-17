@@ -1,0 +1,107 @@
+#! /bin/bash
+#############################################################################
+#
+#          FILE: mysql-operator
+# 
+#         USAGE: 
+#                `basename $0` <backup> <dbname>
+#                `basename $0` <restore> <dbname> <file>
+# 
+#   DESCRIPTION: Backup and restore the db
+# 
+#       OPTIONS: ---
+#  REQUIREMENTS: ---
+#          BUGS: ---
+#         NOTES: ---
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Fri Dec 16 15:43:28 CST 2016
+#      REVISION: 1.0.0
+#############################################################################
+
+declare -r mysql_home="/usr/local/mysqld"
+declare -r backup_dir="/mnt/data/backup/mysql_backup"
+declare -r now_time=$(date "+%Y-%m-%d_%H-%M-%S")
+
+#############################################################################
+## backup db
+#############################################################################
+function backup_db()
+{   
+    local dbname=$1
+    local backup_name="${dbname}-${now_time}.sql"
+    pushd ${mysql_home} > /dev/null
+    echo "backup the ${dbname},please wait ..."
+    [[ ! -d ${backup_dir} ]] && /bin/mkdir -p ${backup_dir}
+    ./bin/mysqldump -uroot -p ${dbname} > ${backup_dir}/${backup_name}
+    echo "backup the ${dbname} to ${backup_dir}/${backup_name}"
+    popd > /dev/null
+}
+
+#############################################################################
+## resotre db
+#############################################################################
+function restore_db()
+{   
+    local dbname=$1
+    local restore_file=$2
+    echo "restore the ${dbname},please wait ..."
+    pushd ${mysql_home} > /dev/null
+    ./bin/mysql -uroot -p ${dbname} < ${restore_file}
+    echo "retore the ${dbname} successful ..."
+    popd > /dev/null
+}
+
+#############################################################################
+## print help 
+#############################################################################
+function print_help()
+{
+    echo "Usage:" 
+    echo "1. backup the db"
+    echo "run: `basename $0` <backup> <dbname>"
+    echo "2. resotre the db"
+    echo "run: `basename $0` <restore> <dbname> <file/absolute/path>"
+}
+
+#############################################################################
+## check dbname 
+#############################################################################
+function have_dbname()
+{
+    [[ ! -n "${dbname}" ]] && print_help && exit
+}
+
+#############################################################################
+## check restore filename
+#############################################################################
+function have_file_name()
+{
+    [[ ! -n "${restore_file}" ]] && print_help && exit
+}
+
+#############################################################################
+## main logic
+#############################################################################
+function main()
+{
+    operate=$1
+    dbname=$2
+    restore_file=$3
+    case "$operate" in
+        "backup")
+            have_dbname
+            backup_db $dbname $bak_dir
+        ;;
+        "restore")
+            echo ${restore_file}
+            have_file_name
+            restore_db $dbname $restore_file
+        ;;
+        *)
+            print_help
+        ;;
+    esac
+}
+
+main $@
