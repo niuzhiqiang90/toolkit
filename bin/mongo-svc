@@ -12,11 +12,11 @@
 #      REVISION: 1.0.0
 ################################################################################
 
-declare -r mongod_home="/usr/local/mongod"
+declare -r mongod_home="/usr/local/mongodb"
 declare -r mongod_bin="./bin/mongod"
 declare -r mongod_conf="./conf/mongod.conf"
 # change the mongo log dir to your own
-declare -r mongod_log="/mnt/data/mongodb/log/mongod.log"
+declare -r mongod_log="/mnt/data/mongodb/logs/mongod.log"
 declare -r mongod_log_dir=$(dirname $mongod_log)
 
 ###############################################################################
