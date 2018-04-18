@@ -1,0 +1,135 @@
+#!/bin/bash
+################################################################################
+#          FILE: mongo-svc
+#         USAGE: 
+#   DESCRIPTION: 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Sat 09 Sep 2017 12:31:34 AM CST
+#      REVISION: 1.0.0
+################################################################################
+
+declare -r redis_home="/usr/local/redis"
+declare -r redis_bin="./bin/redis-server"
+declare -r redis_conf="./conf/redis.conf"
+# change the mongo log dir to your own
+declare -r redis_log="/mnt/data/dbs/redis/logs/redis.log"
+declare -r redis_log_dir=$(dirname $redis_log)
+
+###############################################################################
+# get redis pid
+##############################################################################
+function get_redis_pid()
+{
+    local redis_pid=$(ps -ef | grep ${redis_bin} | grep -v grep | awk '{print $2}')
+    if [[ ${redis_pid} -ne 0 ]]; then
+        echo ${redis_pid}
+        return ${redis_pid}
+    fi
+    return 0
+}
+
+###############################################################################
+# start redis 
+# if the log dir and file not exist, create it 
+##############################################################################
+function start_redis()
+{
+    local redis_pid=$(get_redis_pid)
+    if [[ ${redis_pid} -ne 0 ]]; then
+        echo "redis already running, PID=${redis_pid}"
+        exit
+    fi
+    pushd ${redis_home} > /dev/null
+    [[ ! -d ${redis_log_dir} ]] && /bin/mkdir -p ${redis_log_dir} && /usr/bin/touch ${redis_log}
+    ${redis_bin} ${redis_conf} 2>&1 >> $redis_log &
+    sleep 3
+    local redis_pid=$(get_redis_pid)
+    if [[ ${redis_pid} -ne 0 ]]; then
+        echo "redis started..., PID=${redis_pid}"
+    else
+	    echo "redis start failed..."
+
+    fi 
+    popd > /dev/null
+}
+
+###############################################################################
+# stop redis 
+##############################################################################
+function stop_redis()
+{
+    local redis_pid=$(get_redis_pid)
+    if [[ ${redis_pid} -ne 0 ]]; then
+        /bin/kill ${redis_pid}
+	    echo "redis quit..."
+    else
+        echo "redis is stopped" 
+    fi
+}
+
+###############################################################################
+# get redis status
+##############################################################################
+function get_redis_status()
+{
+    local redis_pid=$(get_redis_pid)
+    if [[ $redis_pid -ne 0 ]]; then
+        echo "redis now is running, PID=${redis_pid}"
+    else
+        echo "redis is stopped"
+    fi
+}
+
+###############################################################################
+# print the log
+##############################################################################
+function view_log()
+{
+    pushd ${redis_log_dir} > /dev/null
+    /usr/bin/tail -f ${redis_log}
+    popd > /dev/null
+}
+
+###############################################################################
+# print the usage
+##############################################################################
+function print_usage()
+{
+    echo "Usage: $0 {start|stop|restart|status|tail}"
+    exit 1
+}
+
+###############################################################################
+# the nain logic
+##############################################################################
+function main()
+{
+    [[ $# -ne 1 ]] && print_usage
+    case "$1" in
+    	start)
+    		start_redis
+    		;;
+    	stop)
+    		stop_redis
+    		;;
+    	restart)
+    		stop_redis
+            sleep 1
+    		start_redis
+    		;;
+        status)
+            get_redis_status
+            ;;
+        tail)
+            view_log
+            ;;
+    	*)
+            print_usage
+    esac
+}
+
+main $@

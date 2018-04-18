@@ -1,0 +1,34 @@
+#!/bin/bash
+################################################################################
+#          FILE: redis-cli
+#         USAGE: 
+#   DESCRIPTION: 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Tue 17 Apr 2018 09:32:43 PM CST
+#      REVISION: 1.0.0
+################################################################################
+declare -r redis_home="/usr/local/redis"
+
+################################################################################
+# main 
+################################################################################
+function main()
+{
+    local argv=$#
+    pushd ${redis_home} > /dev/null
+    case ${argv} in
+        0)
+            ./bin/redis-cli -p 6279 --raw
+            ;;
+        *)
+            ./bin/redis-cli -p 6279 --raw ${argv}
+            ;;
+    esac
+    popd > /dev/null
+}
+
+main $@

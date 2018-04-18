@@ -1,0 +1,34 @@
+#!/bin/bash
+################################################################################
+#          FILE: mongo-cli
+#         USAGE: 
+#   DESCRIPTION: 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Tue 17 Apr 2018 09:32:43 PM CST
+#      REVISION: 1.0.0
+################################################################################
+declare -r mongod_home="/usr/local/mongodb"
+
+################################################################################
+# main 
+################################################################################
+function main()
+{
+    local argv=$#
+    pushd ${mongod_home} > /dev/null
+    case ${argv} in
+        0)
+            ./bin/mongo localhost:27017
+            ;;
+        *)
+            ./bin/mongo $@
+            ;;
+    esac
+    popd > /dev/null
+}
+
+main $@
