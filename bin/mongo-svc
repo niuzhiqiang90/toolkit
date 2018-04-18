@@ -46,6 +46,7 @@ function start_mongod()
     pushd ${mongod_home} > /dev/null
     [[ ! -d ${mongod_log_dir} ]] && /bin/mkdir -p ${mongod_log_dir} && /usr/bin/touch ${mongod_log}
     ${mongod_bin} --config ${mongod_conf} 2>&1 >> $mongod_log &
+    sleep 3
     local mongod_pid=$(get_mongod_pid)
     if [[ ${mongod_pid} -ne 0 ]]; then
         echo "mongod started..., PID=${mongod_pid}"
