@@ -20,6 +20,7 @@ declare -r nginx_cache_home="/home/${LOGNAME}/tmp/nginx/cache"
 declare -r nginx_temp_home="/home/${LOGNAME}/tmp/nginx/tmp"
 declare -r php_home="/usr/local/php"
 declare -r php_fpm_cmd="${php_home}/sbin/php-fpm"
+declare -r auto_gen_dir="${nginx_home}/conf/auto_gen"
 
 ################################################################################
 # start nginx
@@ -32,12 +33,13 @@ function start_nginx()
         exit
     fi
 
-    start_php_fpm
+    [[ -f ${php_fpm_cmd} ]] && start_php_fpm
     echo "Starting nginx ..."
     sudo /bin/rm -rf ${nginx_cache_home}/*
+    [[ -d ${auto_gen_dir} ]] && init_autogen
     pushd ${nginx_home} > /dev/null
     sudo ${nginx_cmd} -c ${nginx_conf} &
-    sleep 1
+    sleep 3
     local nginx_pid=$(get_nginx_pid)
     if [[ $nginx_pid -ne 0 ]]; then
         echo "nginx started, PID=${nginx_pid}"
@@ -83,6 +85,18 @@ function clean_temp_files()
     sudo /bin/rm -rf ${nginx_cache_home}/*
     sudo /bin/rm -rf ${nginx_temp_home}/*
     [[ $? -eq 0 ]] && echo "ok" || echo "failed"
+}
+
+################################################################################
+# init auto gen
+################################################################################
+function init_autogen()
+{
+    pushd ${nginx_auto_gen} > /dev/null
+    for auto_gen_conf_file in $(ls ./); do
+        /bin/echo > ${auto_gen_conf_file}
+    done
+    popd > /dev/null
 }
 
 ################################################################################
