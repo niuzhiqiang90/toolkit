@@ -1,0 +1,165 @@
+#! /bin/bash
+#############################################################################
+#
+#          FILE: mongodb-operator
+#
+#         USAGE:
+#                `basename $0` <show> <dbname>
+#                `basename $0` <backup> <dbname>
+#                `basename $0` <restore> <dbname> <file>
+#
+#   DESCRIPTION:  Show the dbs
+#                 Backup and restore the db
+#
+#       OPTIONS: ---
+#  REQUIREMENTS: ---
+#          BUGS: ---
+#         NOTES: ---
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION:
+#       CREATED: Fri Dec 16 15:43:28 CST 2016
+#      REVISION: 1.0.0
+#############################################################################
+
+declare -r mongobin="/usr/local/mongodb"
+declare -r file_dir="/mnt/data/backup"
+declare -r host=127.0.0.1
+declare -r port=27017
+declare -r backup_time=$(date "+%Y-%m-%d_%H-%M-%S")
+
+#############################################################################
+# backup db
+# Arguments:
+#   dbname $1
+# Returns:
+#
+# Commits:
+#
+#############################################################################
+function backup_db()
+{
+    local dbname=$1
+    pushd ${mongobin} > /dev/null
+    echo "backup the ${dbname},please wait ..."
+    ./bin/mongodump --host $host --port $port -d $dbname -o $file_dir/${dbname}_${backup_time}
+    popd > /dev/null
+    pushd ${file_dir} > /dev/null
+    echo "tar the files, please wait ..."
+    tar -zcvf ${dbname}_${backup_time}.tar.gz ./${dbname}_${backup_time}/
+    echo "clean up the temp files, please wait ..."
+    rm -r ./${dbname}_${backup_time}
+    [[ $? -eq 0 ]] && echo "backup the ${dbname} to ${file_dir}/${dbname}_${backup_time}.tar.gz successful!"
+    popd > /dev/null
+}
+
+#############################################################################
+# restore db from tar.gz file
+# Arguments:
+#   dbname $1
+#   restore_file $2
+# Returns:
+#
+# Commits:
+#
+#############################################################################
+function restore_db()
+{
+    local dbname=$1
+    local restore_file=$2
+    local restore_dir=$(dirname ${restore_file})
+    pushd ${restore_dir} > /dev/null
+    tar -zxvf ${restore_file}
+    popd > /dev/null
+
+    pushd ${mongobin} > /dev/null
+    read -t 3 -n 1 -p "Before the restore, drop the database ? [Y/N]:" yourchoice
+    [[ ${yourchoice}=="Y" ]] && ./bin/mongo $dbname --eval "db.dropDatabase()"
+
+    echo "restore the ${dbname},please wait ..."
+    local restore_dir=`echo ${restore_file} | awk -F "." '{print $1}'`
+    ./bin/mongorestore -d ${dbname} --drop ${restore_dir}/${dbname}
+    popd > /dev/null
+
+    pushd ${restore_dir} > /dev/null
+    echo "clean up the temp files,please wait ..."
+    rm -r ${restore_dir}
+    [[ $? -eq 0 ]] && echo "restore the ${dbname} from ${restore_file} successful!"
+    popd > /dev/null
+}
+
+#############################################################################
+# list the dbs
+# Arguments:
+#
+# Returns:
+#
+# Commits:
+#
+#############################################################################
+function show_dbs()
+{
+    pushd ${mongobin} > /dev/null
+    echo "show dbs" | ./bin/mongo
+    popd > /dev/null
+}
+
+#############################################################################
+# print help info
+#############################################################################
+function print_help()
+{
+    echo "Usage:"
+    echo "1. show dbs in the mongo"
+    echo "run: `basename $0` <show>"
+    echo "\`or\`"
+    echo "2. backup the db"
+    echo "run: `basename $0` <backup> <dbname>"
+    echo "3. resotre the db"
+    echo "run: `basename $0` <restore> <dbname> <file>"
+    exit
+}
+
+#############################################################################
+# check the dbname
+#############################################################################
+function have_dbname()
+{
+    [[ ! -n "${dbname}" ]] && print_help && exit
+}
+
+#############################################################################
+# check the file name
+#############################################################################
+function have_file_name()
+{
+    [[ ! -n "${restore_file}" ]] && print_help && exit
+}
+
+#############################################################################
+# the main logic
+#############################################################################
+function main()
+{
+    local operate=$1
+    local dbname=$2
+    local restore_file=$3
+    case "$operate" in
+        "show")
+            show_dbs ${dbname}
+        ;;
+        "backup")
+            have_dbname
+            backup_db $dbname $bak_dir
+        ;;
+        "restore")
+            echo ${restore_file}
+            have_file_name
+            restore_db $dbname $restore_file
+        ;;
+        *)
+            print_help
+        ;;
+    esac
+}
+
+main $@

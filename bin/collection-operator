@@ -1,0 +1,146 @@
+#! /bin/bash
+#############################################################################
+#
+#          FILE: collection-operator
+# 
+#         USAGE: 
+#                `basename $0` <show> <dbname>
+#                `basename $0` <backup|restore> <dbname> <collection_name>
+# 
+#   DESCRIPTION:  Show the collections
+#                 Backup and restore the ec.quotation collection
+# 
+#       OPTIONS: ---
+#  REQUIREMENTS: ---
+#          BUGS: ---
+#         NOTES: ---
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Fri Dec 16 15:43:28 CST 2016
+#      REVISION: 1.0.0
+#############################################################################
+declare -r mongobin="/usr/local/mongodb"
+declare -r file_dir="/mnt/data/backup"
+
+################################################################################
+# backup collection
+# Arguments: 
+#   dbname $1
+#   collection $2
+# Returns:   
+#   
+# Commits:   
+################################################################################
+function backup_collection()
+{   
+    local dbname=$1
+    local collection=$2
+    pushd ${mongobin} > /dev/null
+    echo "export the ${collection},please wait ..."
+    ./bin/mongoexport -d ${dbname} -c ${collection} -o ${file_dir}/${collection} 
+    [[ $? -eq 0 ]] && echo "export the ${collection} to ${file_dir}/${collection} successful!"
+    popd > /dev/null
+}
+
+################################################################################
+# restore collection
+# Arguments: 
+#   dbname $1
+#   collection $2
+#   restore_file $3
+# Returns:   
+#   
+# Commits:   
+################################################################################
+function restore_collection()
+{   
+    local dbname=$1
+    local collection=$2
+    local restore_file=$3
+    pushd ${mongobin} > /dev/null
+    local collecion_exist=`echo "show collections" | ./bin/mongo ${dbname} | grep ${collection}`
+    if [[ ${collecion_exist} ]];then
+        echo "${collection} is exist, now DROP it!"
+        echo "db.${collection}.drop()" | ./bin/mongo ${dbname} > /dev/null
+    fi
+    echo "import the ${collection},please wait ..."
+    ./bin/mongoimport -d ${dbname} -c ${collection} ${restore_file}
+    [[ $? -eq 0 ]] && echo "import the ${collection} from ${restore_file} successful!"
+    popd > /dev/null
+}
+
+################################################################################
+# show collection
+# Arguments: 
+#   dbname $1
+# Returns:   
+#   
+# Commits:   
+################################################################################
+function show_collections()
+{   
+    local dbname=$1
+    pushd ${mongobin} > /dev/null
+    echo "show collections" | ./bin/mongo ${dbname}
+    popd > /dev/null
+}
+
+################################################################################
+# print help
+################################################################################
+function print_help()
+{
+    echo "Usage:" 
+    echo "1. show collections in the db"
+    echo "run: `basename $0` <show> <dbname>"
+    echo "\`or\`"
+    echo "2. backup or restore the collection"
+    echo "run: `basename $0` <backup|restore> <dbname> <collection_name>"
+    exit ${E_WRONG_ARGS}
+}
+
+################################################################################
+# check the dbname  
+################################################################################
+function have_dbname()
+{
+    [[ ! -n "${dbname}" ]] && print_help && exit
+}
+
+################################################################################
+# check the collection
+################################################################################
+function have_collection()
+{
+    [[ ! -n "${collection}" ]] && print_help && exit
+}
+
+################################################################################
+# the main logic
+################################################################################
+function main()
+{
+    local operate=$1
+    local dbname=$2
+    local collection=$3
+    local restore_file=$4
+    case "$operate" in
+        "show")
+            have_dbname
+            show_collections ${dbname}
+        ;;
+        "backup")
+            have_collection
+            backup_collection $dbname $collection
+        ;;
+        "restore")
+            have_collection
+            restore_collection $dbname $collection $restore_file
+        ;;
+        *)
+            print_help
+        ;;
+    esac
+}
+
+main $@
