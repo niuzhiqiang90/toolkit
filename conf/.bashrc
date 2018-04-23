@@ -116,29 +116,45 @@ if ! shopt -oq posix; then
   fi
 fi
 
-if [ -f ~/.ssh_aliases ]; then
+if [[ -f ~/.ssh_aliases ]]; then
     . ~/.ssh_aliases
 fi
 
 # set oracle jdk environment
-export JAVA_HOME=/usr/local/jdk/1.8.0
-export CLASSPATH=.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib:$CLASSPATH
-export PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH
+if [[ -d "$HOME/opt/jdk-1.8.0" ]] ; then
+    export JAVA_HOME=$HOME/opt/jdk-1.8.0
+    export CLASSPATH=.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib:$CLASSPATH
+    export PATH=$JAVA_HOME/bin:$JAVA_HOME/jre/bin:$PATH
+fi
 
 # set golang environment
-export PATH=$PATH:/usr/local/go/bin
-export GOPATH=/home/${LOGNAME}/workspace/gopath
+if [[ -d "$HOME/opt/go-1.9.3/bin" ]]; then
+    export GOROOT="$HOME/opt/go-1.9.3"
+    PATH="$HOME/opt/go-1.9.3/bin:$PATH"
+fi
+
+if [[ -d "/${HOME}/workspace/gopath" ]]; then
+    export GOPATH="/${HOME}/workspace/gopath"
+fi
+
+if [[ -d "$HOME/workspace/gopath/bin" ]]; then
+    PATH="$HOME/workspace/gopath/bin:$PATH"
+fi
 
 # set android SDK environment
-export ANDROID_HOME=/home/${LOGNAME}/opt/android
-export PATH=$PATH:$ANDROID_HOME/tools
+if [[ -d "$HOME/opt/android" ]]; then
+    export ANDROID_HOME="/{HOME}/opt/android"
+    PATH="$ANDROID_HOME/tools:$PATH"
+fi
 
 # set gradle environment
-export GRADLE_HOME=/home/${LOGNAME}/opt/gradle-3.3
-export PATH=$GRADLE_HOME/bin:$PATH
+if [[ -d "${HOME}/opt/gradle-3.3" ]]; then
+    export GRADLE_HOME="/$HOME/opt/gradle-3.3"
+    PATH="$GRADLE_HOME/bin:$PATH"
+fi
 
 # set Qt lib environment
-export LD_LIBRARY_PATH=/home/${LOGNAME}/opt/Qt5.9.1/5.9.1/gcc_64/lib
+#export LD_LIBRARY_PATH=/home/${LOGNAME}/opt/Qt5.9.1/5.9.1/gcc_64/lib
  
 # set cmake environment
 export PATH=/usr/local/bin/cmake/bin:$PATH
