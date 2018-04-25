@@ -143,7 +143,7 @@ fi
 
 # set android SDK environment
 if [[ -d "$HOME/opt/android" ]]; then
-    export ANDROID_HOME="/{HOME}/opt/android"
+    export ANDROID_HOME="/${HOME}/opt/android"
     PATH="$ANDROID_HOME/tools:$PATH"
 fi
 
