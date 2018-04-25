@@ -20,7 +20,7 @@ declare -r robo3t_bin="./bin/robo3t"
 ##############################################################################
 function get_robo3t_pid()
 {
-    local robo3t_pid=$(ps -ef | grep ${robo3t_bin} | grep -v grep | awk '{print $2}')
+    local robo3t_pid=$(ps -ef | grep "${robo3t_bin}$" | grep -v grep | awk '{print $2}')
     if [[ ${robo3t_pid} -ne 0 ]]; then
         echo ${robo3t_pid}
         return ${robo3t_pid}
