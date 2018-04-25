@@ -1,0 +1,116 @@
+#!/bin/bash
+################################################################################
+#          FILE: robo3t-operator 
+#         USAGE: 
+#   DESCRIPTION: 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Sat 09 Sep 2017 12:31:34 AM CST
+#      REVISION: 1.0.0
+################################################################################
+
+declare -r robo3t_home="/usr/local/robo3t"
+declare -r robo3t_bin="./bin/robo3t"
+
+###############################################################################
+# get robo3t pid
+##############################################################################
+function get_robo3t_pid()
+{
+    local robo3t_pid=$(ps -ef | grep ${robo3t_bin} | grep -v grep | awk '{print $2}')
+    if [[ ${robo3t_pid} -ne 0 ]]; then
+        echo ${robo3t_pid}
+        return ${robo3t_pid}
+    fi
+    return 0
+}
+
+###############################################################################
+# start robo3t 
+##############################################################################
+function start_robo3t()
+{
+    local robo3t_pid=$(get_robo3t_pid)
+    if [[ ${robo3t_pid} -ne 0 ]]; then
+        echo "robo3t already running, PID=${robo3t_pid}"
+        exit
+    fi
+    pushd ${robo3t_home} > /dev/null
+    ${robo3t_bin} > /dev/null 2>&1 &
+    #sleep 3
+    local robo3t_pid=$(get_robo3t_pid)
+    if [[ ${robo3t_pid} -ne 0 ]]; then
+        echo "robo3t started..., PID=${robo3t_pid}"
+    else
+	    echo "robo3t start failed..."
+
+    fi 
+    popd > /dev/null
+}
+
+###############################################################################
+# stop robo3t 
+##############################################################################
+function stop_robo3t()
+{
+    local robo3t_pid=$(get_robo3t_pid)
+    if [[ ${robo3t_pid} -ne 0 ]]; then
+        /bin/kill ${robo3t_pid}
+	    echo "robo3t quit..."
+    else
+        echo "robo3t is stopped" 
+    fi
+}
+
+###############################################################################
+# get robo3t status
+##############################################################################
+function get_robo3t_status()
+{
+    local robo3t_pid=$(get_robo3t_pid)
+    if [[ $robo3t_pid -ne 0 ]]; then
+        echo "robo3t now is running, PID=${robo3t_pid}"
+    else
+        echo "robo3t is stopped"
+    fi
+}
+
+###############################################################################
+# print the usage
+##############################################################################
+function print_usage()
+{
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 1
+}
+
+###############################################################################
+# the nain logic
+##############################################################################
+function main()
+{
+    [[ $# -ne 1 ]] && print_usage
+    case "$1" in
+    	start)
+    		start_robo3t
+    		;;
+    	stop)
+    		stop_robo3t
+    		;;
+    	restart)
+    		stop_robo3t
+            sleep 1
+    		start_robo3t
+    		;;
+        status)
+            get_robo3t_status
+            ;;
+    	*)
+            print_usage
+    esac
+}
+
+main $@
