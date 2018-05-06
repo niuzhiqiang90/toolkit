@@ -128,9 +128,9 @@ if [[ -d "$HOME/opt/jdk-1.8.0" ]] ; then
 fi
 
 # set golang environment
-if [[ -d "$HOME/opt/go-1.9.3/bin" ]]; then
-    export GOROOT="$HOME/opt/go-1.9.3"
-    PATH="$HOME/opt/go-1.9.3/bin:$PATH"
+if [[ -d "$HOME/opt/go-1.10.2/bin" ]]; then
+    export GOROOT="$HOME/opt/go-1.10.2"
+    PATH="$HOME/opt/go-1.10.2/bin:$PATH"
 fi
 
 if [[ -d "/${HOME}/workspace/gopath" ]]; then
@@ -154,8 +154,8 @@ if [[ -d "${HOME}/opt/gradle-3.3" ]]; then
 fi
 
 # set Qt lib environment
-#export LD_LIBRARY_PATH=/home/${LOGNAME}/opt/Qt5.9.1/5.9.1/gcc_64/lib
- 
+#export LD_LIBRARY_PATH=/${HOME}/opt/Qt5.9.1/5.9.1/gcc_64/lib
+
 # set cmake environment
 export PATH=/usr/local/bin/cmake/bin:$PATH
 
