@@ -1,0 +1,132 @@
+#!/bin/bash
+################################################################################
+#          FILE: wiznote-cli
+#         USAGE: 
+#   DESCRIPTION: this script is used to manage the wiznote 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Sun 27 Aug 2017 08:36:17 PM CST
+#      REVISION: 1.0.0
+################################################################################
+
+set -o nounset
+declare -r wiznote_cmd="/usr/local/bin/wiznote"
+declare -r wiznote_log="/home/${LOGNAME}/.wiznote/log/wiznote.log"
+
+################################################################################
+# start wiznote
+################################################################################
+function start_wiznote() 
+{
+    local wiznote_pid=$(get_wiznote_pid)
+    if [[ $wiznote_pid -ne 0 ]]; then
+        echo "wiznote already running, PID=${wiznote_pid}"
+        exit
+    fi
+    echo "Starting wiznote ..."
+    local retry_times=1
+    local wiznote_pid=""
+    while [[ ! $wiznote_pid ]]; do
+        ${wiznote_cmd} >> ${wiznote_log} 2>&1 &
+        sleep 1
+        wiznote_pid=$(get_wiznote_pid)
+        if [[ $wiznote_pid -ne 0 ]]; then
+            echo "wiznote started, PID=${wiznote_pid}"
+            break
+        fi
+        let retry_times+=1
+        if [[ $retry_times -gt 3 ]]; then
+            echo "wiznote start failed"
+            break
+        fi
+    done
+}
+
+################################################################################
+# stop wiznote
+################################################################################
+function stop_wiznote() 
+{
+    local wiznote_pid=$(get_wiznote_pid)
+    if [[ $wiznote_pid -ne 0 ]]; then
+        kill ${wiznote_pid}
+        echo "quit wiznote ..." 
+    else
+        echo "wiznote stopped"
+    fi
+}
+
+################################################################################
+# get the wiznote pid
+################################################################################
+function get_wiznote_pid()
+{
+    local wiznote_pid=$(ps -ef | grep -i $wiznote_cmd | grep -v grep | head -n 1 | awk '{print $2}')
+    if [[ ${wiznote_pid} ]]; then
+        echo ${wiznote_pid}
+        return $wiznote_pid
+    fi
+    return 0
+}
+
+################################################################################
+# get the wiznote running status
+################################################################################
+function get_wiznote_status()
+{
+    local wiznote_pid=$(get_wiznote_pid)
+    if [[ ${wiznote_pid} -ne 0 ]]; then
+        echo "wiznote is running, PID=${wiznote_pid}"
+    else
+        echo "wiznote is stopped"
+    fi
+}
+
+################################################################################
+# print the usage
+################################################################################
+function usage()
+{
+    echo "Usage: $0 {start|stop|restart|reload|status|clean}"
+    echo "1. run \`$0 start\`: start the wiznote"
+    echo "2. run \`$0 stop\`: stop the wiznote"
+    echo "3. run \`$0 restart\`: restart the wiznote"
+    echo "4. run \`$0 status\`: get the wiznote status"
+    exit 1
+}
+
+################################################################################
+# main logic
+################################################################################
+function main()
+{   
+    if [[ $# -ne 1 ]]; then
+        usage
+    fi
+
+    case "$1" in
+        start)
+            start_wiznote
+            ;;
+        stop)
+            stop_wiznote
+            ;;
+        restart)
+            stop_wiznote
+            sleep 1
+            start_wiznote
+            ;;
+        status)
+            get_wiznote_status
+            ;;
+        *)
+            usage
+            ;;
+    esac
+}
+
+main $@
+
