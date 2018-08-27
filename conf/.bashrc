@@ -133,8 +133,8 @@ if [[ -d "$HOME/opt/go-1.10.2/bin" ]]; then
     PATH="$HOME/opt/go-1.10.2/bin:$PATH"
 fi
 
-if [[ -d "/${HOME}/workspace/gopath" ]]; then
-    export GOPATH="/${HOME}/workspace/gopath"
+if [[ -d "${HOME}/workspace/gopath" ]]; then
+    export GOPATH="${HOME}/workspace/gopath"
 fi
 
 if [[ -d "$HOME/workspace/gopath/bin" ]]; then
@@ -143,7 +143,7 @@ fi
 
 # set android SDK environment
 if [[ -d "$HOME/opt/android" ]]; then
-    export ANDROID_HOME="/${HOME}/opt/android"
+    export ANDROID_HOME="${HOME}/opt/android"
     PATH="$ANDROID_HOME/tools:$PATH"
 fi
 
@@ -151,6 +151,10 @@ fi
 if [[ -d "${HOME}/opt/gradle-3.3" ]]; then
     export GRADLE_HOME="/$HOME/opt/gradle-3.3"
     PATH="$GRADLE_HOME/bin:$PATH"
+fi
+
+if [[ -d "$HOME/opt/toolkit/bin" ]]; then
+    PATH="$HOME/opt/toolkit/bin:$PATH"
 fi
 
 # set Qt lib environment
