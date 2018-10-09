@@ -1,0 +1,49 @@
+#!/bin/bash
+################################################################################
+#          FILE: tmux-init
+#         USAGE: tmux-init
+#   DESCRIPTION: the script is used to init the tmux sessions 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Sun 29 May 2016 01:22:09 PM CST
+#      REVISION: 1.0.0
+################################################################################
+
+tmux_init()
+{
+    ### create session work
+    tmux new-session -s "work" -d -n "operation"
+    tmux new-window -n "platforms"
+    tmux new-window -n "ssh-window" 
+
+    tmux new-window -n "other" "htop"
+    tmux split-window -v "vim"
+    tmux split-window -h "dstat -v"
+    
+    tmux send-keys -t work:operation 'cdtoolkit' C-m 
+    tmux send-keys -t work:platforms 'cd ~/platforms' C-m
+    
+    ### create session study
+    tmux new-session -s "study" -d -n "shell"
+    tmux new-window -n "python"
+	tmux send-keys -t study:shell 'cd ~/workspace/shell && clear' C-m
+	tmux send-keys -t study:python 'cd ~/workspace/python && clear' C-m
+
+
+    tmux new-session -s "ssh-session" -d -n "ssh1"
+    tmux new-window -n "ssh2"
+    tmux new-window -n "ssh3"
+    
+    ### create session screensaver
+    tmux new-session -s "screensaver" -d -n "asciiquarium"
+    tmux send-key -t screensaver:asciiquarium 'asciiquarium' C-m
+ 
+	tmux -2 attach-session  -t "study"    
+}
+
+if which tmux 2>&1 >/dev/null; then
+    test -z "$TMUX" && (tmux attach || tmux_init)
+fi
