@@ -1,0 +1,131 @@
+#!/bin/bash
+################################################################################
+#          FILE: consul-svc
+#         USAGE: 
+#   DESCRIPTION: 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Thu 22 Mar 2018 10:38:19 AM CST
+#      REVISION: 1.0.0
+################################################################################
+declare -r consul_home="/usr/local/consul"
+declare -r consul_bin="./bin/consul"
+declare -r consul_conf="./conf/consul.json"
+declare -r consul_log="./logs/consul.log"
+
+
+###############################################################################
+# get consul pid
+###############################################################################
+function get_consul_pid()
+{
+    local consul_pid=`ps -ef | grep "${consul_bin} " | grep -v grep | awk '{print $2}'`
+    if [[ ${consul_pid} -ne 0 ]]; then
+        echo ${consul_pid}
+        return
+    fi  
+    return 0
+}
+
+###############################################################################
+# start consul
+###############################################################################
+function start_consul()
+{
+    local consul_pid=$(get_consul_pid)
+    if [[ ${consul_pid} -ne 0 ]]; then
+        echo "consul already running, PID=${consul_pid}"
+        exit
+    fi
+    pushd ${consul_home} > /dev/null
+    ${consul_bin} agent -config-file ${consul_conf}  2>&1 >> ${consul_log} &
+    sleep 3
+    local consul_pid=$(get_consul_pid)
+    if [[ ${consul_pid} -ne 0 ]]; then
+        echo "consul_pid started..., PID=${consul_pid}"
+    else
+        echo "consul start failed..."
+    fi 
+    popd > /dev/null
+}
+
+###############################################################################
+# stop consul
+###############################################################################
+function stop_consul()
+{
+    local consul_pid=$(get_consul_pid)
+    if [[ ${consul_pid} -ne 0 ]]; then
+        /bin/kill ${consul_pid}
+        echo "consul quit..."
+    else
+        echo "consul is stopped" 
+    fi
+}
+
+###############################################################################
+# get consul status
+###############################################################################
+function get_consul_status()
+{
+    local consul_pid=$(get_consul_pid)
+    if [[ ${consul_pid} -ne 0 ]]; then
+        echo "consul now is running, PID=${consul_pid}"
+    else
+        echo "consul is stopped"
+    fi
+}
+
+###############################################################################
+# view the consul log 
+##############################################################################
+function view_log()
+{
+    pushd ${consul_home} > /dev/null
+    /usr/bin/tail -f ${consul_log}
+    popd > /dev/null
+}
+
+###############################################################################
+# print the usage
+##############################################################################
+function print_usage()
+{
+    echo "Usage: $0 {start|stop|restart|status|tail}"
+    exit 1
+}
+
+###############################################################################
+# the nain logic
+##############################################################################
+function main()
+{
+    local argv=$#
+    [[ ${argv} -ne 1 ]] && print_usage || local operator=$1
+    case "${operator}" in
+        start)
+            start_consul
+            ;;
+        stop)
+            stop_consul
+            ;;
+        restart)
+            stop_consul
+            sleep 1
+            start_consul
+            ;;
+        status)
+            get_consul_status
+            ;;
+        tail)
+            view_log
+            ;;
+        *)
+            print_usage
+    esac
+}
+
+main $@
