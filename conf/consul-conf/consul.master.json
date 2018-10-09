@@ -1,0 +1,20 @@
+{
+    "datacenter": "DC-BJ",
+    "log_level": "INFO",
+    "node_name": "prod-master",
+    "node_meta": {
+        "inst_type": "prod"
+    },
+    "bind_addr": "192.168.1.2",
+    "client_addr": "127.0.0.1",
+    "data_dir": "/mnt/data/consul/data",
+    "ports": {
+        "dns": 8600,
+        "http": 8500,
+        "server": 8300,
+        "serf_lan": 8301,
+        "serf_wan": 8302
+    },
+    "bootstrap": true,
+    "server": true
+}
