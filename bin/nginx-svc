@@ -180,6 +180,7 @@ function main()
             ;;
         restart)
             stop_nginx
+            sleep 2
             start_nginx
             ;;
         reload)
