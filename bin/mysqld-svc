@@ -1,0 +1,131 @@
+#!/bin/bash
+################################################################################
+#          FILE: mysqld-svc
+#         USAGE: 
+#   DESCRIPTION: 
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Sat 09 Sep 2017 12:31:34 AM CST
+#      REVISION: 1.0.0
+################################################################################
+
+declare -r mysqld_bin="/usr/local/mysqld/bin/mysqld_safe"
+declare -r mysqld_log="/mnt/data/dbs/mysqld/logs/mysqld.log"
+declare -r mysqld_cnf="/etc/my.cnf"
+declare -r mysqld_user=$LOGNAME
+
+################################################################################
+# get mysqld pid
+################################################################################
+function get_mysqld_pid()
+{
+    local mysqld_pid=$(ps -ef | grep ${mysqld_bin} | grep -v grep | awk '{print $2}')
+    if [[ ${mysqld_pid} -ne 0 ]]; then
+        echo ${mysqld_pid}
+        return ${mysqld_pid}
+    fi
+    return 0
+}
+
+################################################################################
+# start mysqld 
+################################################################################
+function start_mysqld()
+{
+    local mysqld_pid=$(get_mysqld_pid)
+    if [[ ${mysqld_pid} -ne 0 ]]; then
+        echo "mysqld already running, PID=${mysqld_pid}"
+        exit
+    fi
+    if [[ -f ${mysqld_cnf} ]]; then
+        ${mysqld_bin} --user=${mysqld_user} &
+    else
+        echo "The ${mysqld_cnf} file not exist ..."
+    fi
+    sleep 3
+    local mysqld_pid=$(get_mysqld_pid)
+    if [[ ${mysqld_pid} -ne 0 ]]; then
+        echo "mysqld started..., PID=${mysqld_pid}"
+    else
+	    echo "mysqld start failed..."
+
+    fi 
+}
+
+################################################################################
+# stop mysqld 
+################################################################################
+function stop_mysqld()
+{
+    local mysqld_pid=$(get_mysqld_pid)
+    if [[ ${mysqld_pid} -ne 0 ]]; then
+        /bin/ps -ef | grep ${mysqld_pid} | awk '{print $2}' | /usr/bin/xargs kill -9
+	    echo "mysqld quit..."
+    else
+        echo "mysqld is stopped" 
+    fi
+}
+
+################################################################################
+# get mysqld status
+################################################################################
+function get_mysqld_status()
+{
+    local mysqld_pid=$(get_mysqld_pid)
+    if [[ $mysqld_pid -ne 0 ]]; then
+        echo "mysqld now is running, PID=${mysqld_pid}"
+    else
+        echo "mysqld is stopped"
+    fi
+}
+
+################################################################################
+# print the log
+################################################################################
+function view_log()
+{
+    /usr/bin/tail -f ${mysqld_log}
+}
+
+################################################################################
+# print the usage
+################################################################################
+function print_usage()
+{
+    echo "Usage: $0 {start|stop|restart|status|tail}"
+    exit 1
+}
+
+################################################################################
+# the nain logic
+################################################################################
+function main()
+{
+    [[ $# -ne 1 ]] && print_usage
+    case "$1" in
+    	start)
+    		start_mysqld
+    		;;
+    	stop)
+    		stop_mysqld
+    		;;
+    	restart)
+    		stop_mysqld
+            sleep 1
+    		start_mysqld
+    		;;
+        status)
+            get_mysqld_status
+            ;;
+        tail)
+            view_log
+            ;;
+    	*)
+            print_usage
+    esac
+}
+
+main $@
