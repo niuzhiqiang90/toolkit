@@ -537,7 +537,7 @@ let g:airline_symbols.linenr = ''
 "let g:airline_right_sep = '◀'
 
 " new file set title and turn to endline
-autocmd BufNewFile *.sh,*.py,*.rb,*.[ch],*.cpp exec ":call SetTitle()"
+autocmd BufNewFile *.sh,*.yml,*.py,*.rb,*.[ch],*.cpp exec ":call SetTitle()"
 function SetTitle()
     if &filetype == 'sh'
         call setline(1,"\#!/bin/bash")
@@ -554,6 +554,21 @@ function SetTitle()
         call append(line(".")+10, "\#      REVISION: 1.0.0" )
         call append(line(".")+11, "\################################################################################")
         call append(line(".")+12, "")
+
+    elseif &filetype == 'yaml'
+        call setline(1,"################################################################################")
+        call append(line("."), "#          FILE: ".expand('%'))
+        call append(line(".")+1, "#         USAGE: ")
+        call append(line(".")+2, "#   DESCRIPTION: ")
+        call append(line(".")+3, "#       OPTIONS: --- ")
+        call append(line(".")+4, "#          BUGS: --- ")
+        call append(line(".")+5, "#         NOTES: --- ")
+        call append(line(".")+6, "#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com")
+        call append(line(".")+7, "#  ORGANIZATION: ")
+        call append(line(".")+8, "#       CREATED: ".strftime("%c"))
+        call append(line(".")+9, "#      REVISION: 1.0.0")
+        call append(line(".")+10, "\################################################################################")
+        call append(line(".")+11, "")
 
     elseif &filetype == 'python'
         call setline(1,"#!/usr/bin/env python")
