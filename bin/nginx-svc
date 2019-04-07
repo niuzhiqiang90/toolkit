@@ -56,7 +56,9 @@ function stop_nginx()
 {
     local nginx_pid=$(get_nginx_pid)
     if [[ $nginx_pid -ne 0 ]]; then
-        sudo kill ${nginx_pid}
+        pushd ${nginx_home} > /dev/null
+        sudo ${nginx_cmd} -s stop
+        popd > /dev/null
         echo "quit nginx ..." 
         stop_php_fpm
     else

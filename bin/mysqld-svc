@@ -62,7 +62,7 @@ function stop_mysqld()
 {
     local mysqld_pid=$(get_mysqld_pid)
     if [[ ${mysqld_pid} -ne 0 ]]; then
-        /bin/ps -ef | grep ${mysqld_pid} | awk '{print $2}' | /usr/bin/xargs kill -9
+        /usr/local/mysqld/bin/mysqladmin -uroot -p shutdown
 	    echo "mysqld quit..."
     else
         echo "mysqld is stopped" 

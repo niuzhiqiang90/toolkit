@@ -64,7 +64,7 @@ function stop_mongod()
 {
     local mongod_pid=$(get_mongod_pid)
     if [[ ${mongod_pid} -ne 0 ]]; then
-        /bin/kill ${mongod_pid}
+        ${mongod_home}/bin/mongo admin --eval "db.shutdownServer()"
 	    echo "mongod quit..."
     else
         echo "mongod is stopped" 
