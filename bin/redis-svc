@@ -11,9 +11,10 @@
 #       CREATED: Sat 09 Sep 2017 12:31:34 AM CST
 #      REVISION: 1.0.0
 ################################################################################
-
+set -o nounset
 declare -r redis_home="/usr/local/redis"
-declare -r redis_bin="./bin/redis-server"
+declare -r redis_server_bin="./bin/redis-server"
+declare -r redis_cli_bin="./bin/redis-cli"
 declare -r redis_conf="./conf/redis.conf"
 # change the mongo log dir to your own
 declare -r redis_log="/mnt/data/dbs/redis/logs/redis.log"
@@ -24,7 +25,7 @@ declare -r redis_log_dir=$(dirname $redis_log)
 ##############################################################################
 function get_redis_pid()
 {
-    local redis_pid=$(ps -ef | grep ${redis_bin} | grep -v grep | awk '{print $2}')
+    local redis_pid=$(ps -ef | grep ${redis_server_bin} | grep -v grep | awk '{print $2}')
     if [[ ${redis_pid} -ne 0 ]]; then
         echo ${redis_pid}
         return ${redis_pid}
@@ -45,7 +46,7 @@ function start_redis()
     fi
     pushd ${redis_home} > /dev/null
     [[ ! -d ${redis_log_dir} ]] && /bin/mkdir -p ${redis_log_dir} && /usr/bin/touch ${redis_log}
-    ${redis_bin} ${redis_conf} 2>&1 >> $redis_log &
+    ${redis_server_bin} ${redis_conf} 2>&1 >> $redis_log &
     sleep 3
     local redis_pid=$(get_redis_pid)
     if [[ ${redis_pid} -ne 0 ]]; then
@@ -64,7 +65,7 @@ function stop_redis()
 {
     local redis_pid=$(get_redis_pid)
     if [[ ${redis_pid} -ne 0 ]]; then
-        /bin/kill ${redis_pid}
+        ${redis_home}/${redis_cli_bin} -p 6279 SHUTDOWN
 	    echo "redis quit..."
     else
         echo "redis is stopped" 

@@ -11,7 +11,7 @@
 #       CREATED: Tue 17 Apr 2018 09:32:43 PM CST
 #      REVISION: 1.0.0
 ################################################################################
-declare -r redis_home="/usr/local/redis"
+declare -r redis_bin="/usr/local/redis/bin/redis-cli"
 
 ################################################################################
 # main 
@@ -19,16 +19,14 @@ declare -r redis_home="/usr/local/redis"
 function main()
 {
     local argv=$#
-    pushd ${redis_home} > /dev/null
     case ${argv} in
         0)
-            ./bin/redis-cli -p 6279 --raw
+            ${redis_bin} -p 6279 --raw
             ;;
         *)
-            ./bin/redis-cli -p 6279 --raw ${argv}
+            ${redis_bin} -p 6279 --raw ${argv}
             ;;
     esac
-    popd > /dev/null
 }
 
 main $@
