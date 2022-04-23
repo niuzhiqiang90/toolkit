@@ -1,0 +1,78 @@
+#!/bin/bash
+################################################################################
+#          FILE: del-keepalived-virtual-server
+#         USAGE: 
+#   DESCRIPTION: This script is used to clear the IPs listed in the ip list 
+#                from keepalived.conf
+#       OPTIONS: --- 
+#          BUGS: --- 
+#         NOTES: --- 
+#        AUTHOR: niuzhiqiang, niuzhiqiang90@foxmail.com
+#  ORGANIZATION: 
+#       CREATED: Wed Mar  2 16:25:32 2022
+#      REVISION: 1.0.0
+################################################################################
+
+# add global variable here
+declare -r keepalived_config_file="./keepalived.conf"
+declare -r remove_ip_list="./remove_ip_list"
+
+function get_del_lines_number()
+{
+    local virtual_ip=$1
+    local virtual_ip_line=$(grep -n "virtual_server ${virtual_ip} " ${keepalived_config_file} | head -n 1 | awk -F ":" '{print $1}')
+    local file_line_num=$(wc -l ${keepalived_config_file} | awk '{print $1}')
+    let start_line_num=virtual_ip_line+1
+    local next_virtual_server_line=$(sed -n "${start_line_num},${file_line_num}"p ${keepalived_config_file} | grep -n "virtual_server " | head -n 1 | awk -F ":" '{print $1}')
+    let stop_line_num=start_line_num+next_virtual_server_line-2
+
+    let before_virtual_ip_line=virtual_ip_line-1
+    if [[ "$(sed -n ${before_virtual_ip_line}p ${keepalived_config_file})" == "#"* ]]; then
+        virtual_ip_line=${before_virtual_ip_line}
+    fi
+
+    if [[ "$(sed -n ${stop_line_num}p ${keepalived_config_file})" == "#"* ]]; then
+        let stop_line_num=stop_line_num-1
+    fi
+
+    echo "${virtual_ip_line} ${stop_line_num}"
+
+}
+
+################################################################################
+# del_virtual_server 
+# Arguments:
+#  None
+# Returns:
+#  None
+# Commits:
+#
+################################################################################
+function del_virtual_server()
+{
+    local virtual_ip=$1
+    local lines=$(get_del_lines_number $virtual_ip) 
+   # [[ $lines == "" ]] && local lines="0 0"
+    local start=$(echo ${lines} | awk '{print $1}')
+    local stop=$(echo ${lines} | awk '{print $2}')
+    sed -i "" -e "${start},${stop}d" ${keepalived_config_file}
+}
+
+################################################################################
+# the main function
+################################################################################
+function main()
+{
+    while read line; do
+        local ip_exist_times=$(grep "virtual_server ${line} " ${keepalived_config_file} | wc -l | awk '{print  $1}')
+        let time=1
+        while [[ ${time} -le ${ip_exist_times} ]]; do
+            del_virtual_server ${line}
+            let time=time+1
+        done
+   done< <(cat ${remove_ip_list}) 
+    
+}
+
+main $@
+
